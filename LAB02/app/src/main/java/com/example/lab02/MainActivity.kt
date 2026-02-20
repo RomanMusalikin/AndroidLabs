@@ -16,6 +16,6 @@ import com.example.lab02.ui.theme.LAB02Theme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        setContentView(R.layout.layout)
     }
 }
