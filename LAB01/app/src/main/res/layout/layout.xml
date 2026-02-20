@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainLayout"
     android:clickable="true"
@@ -18,11 +19,13 @@
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
         android:layout_weight="0"
+        android:autofillHints=""
         android:background="@null"
         android:ems="10"
         android:inputType="text|textMultiLine|textNoSuggestions"
         android:text="@string/textRand"
-        android:textAlignment="center" />
+        android:textAlignment="center"
+        tools:ignore="LabelFor" />
 
     <Space
         android:layout_width="match_parent"
@@ -34,8 +37,10 @@
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginBottom="10dp"
         android:layout_weight="0"
-        android:backgroundTint="#5263CA"
+        android:background="@drawable/rounded_button_blue"
+        android:backgroundTint="@null"
         android:text="@string/btn_set_text"
         android:textColor="#EEEEEE"
         tools:ignore="VisualLintButtonSize" />
@@ -47,10 +52,11 @@
         android:layout_gravity="center"
         android:layout_marginBottom="20dp"
         android:layout_weight="0"
-        android:backgroundTint="#FF0F0F"
         android:minWidth="300dip"
         android:text="@string/btn_clear_text"
         android:textColor="#F8F8F8"
-        tools:ignore="VisualLintButtonSize,TextContrastCheck" />
+        tools:ignore="VisualLintButtonSize,TextContrastCheck"
+        android:background="@drawable/rounded_button_red"
+        android:backgroundTint="@null" />
 
 </LinearLayout>
