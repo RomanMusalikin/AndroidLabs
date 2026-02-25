@@ -2,8 +2,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="#000000"
     android:orientation="horizontal">
+
+    <ImageButton
+        android:id="@+id/buttonHistory"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="right"
+        android:layout_margin="16dp"
+        android:layout_marginTop="50dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="История"
+        android:padding="12dp"
+        android:src="@drawable/ic_history"
+        android:tint="#888888" />
+
 
     <TextView
         android:id="@+id/tvScreen"
@@ -11,16 +26,21 @@
         android:layout_height="match_parent"
         android:layout_marginBottom="5dp"
         android:layout_weight="1"
-        android:textColor="#FFFFFF" />
+        android:gravity="bottom|right|end"
+        android:paddingLeft="40dp"
+        android:paddingRight="15dp"
+        android:paddingBottom="30dp"
+        android:textColor="#FFFFFF"
+        android:textSize="48sp" />
 
     <LinearLayout
         android:layout_width="160dp"
         android:layout_height="match_parent"
+        android:layout_marginRight="20dp"
         android:layout_weight="1"
         android:orientation="vertical"
-        android:paddingTop="35dp"
         android:paddingRight="30dp"
-        android:paddingBottom="30dp">
+        android:paddingBottom="20dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -62,7 +82,7 @@
                 android:textColor="@color/white"
                 android:textSize="20sp" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/buttonPusto"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
@@ -72,10 +92,9 @@
                 android:layout_marginBottom="7dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_function"
-                android:fontFamily="sans-serif"
-                android:text="@string/xd"
-                android:textColor="@color/white"
-                android:textSize="20sp" />
+                android:contentDescription="МАДИ"
+                android:src="@drawable/car"
+                android:tint="#FFFFFF" />
 
             <Button
                 android:id="@+id/buttonDivision"
