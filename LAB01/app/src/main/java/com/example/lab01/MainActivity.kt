@@ -31,4 +31,5 @@ class MainActivity : ComponentActivity() {
             textMain.setText("")
         }
     }
+
 }

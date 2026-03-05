@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
         setupNumberButton(R.id.button00, "00")
         setupNumberButton(R.id.buttonPoint, ".")
 
-        // Кнопки операций
+        // Операции
         setupOperationButton(R.id.buttonAdd, "+")
         setupOperationButton(R.id.buttonSubtraction, "-")
         setupOperationButton(R.id.buttonMultiplication, "*")
@@ -89,6 +89,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Реакция на нажатие цифр и точки
     private fun setupNumberButton(id: Int, value: String) {
         findViewById<Button>(id).setOnClickListener {
             val currentText = tvScreen.text.toString()
@@ -109,6 +110,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Реакция на нажатие знаков операций
     private fun setupOperationButton(id: Int, operator: String) {
         findViewById<Button>(id).setOnClickListener {
             val currentText = tvScreen.text.toString()
@@ -124,6 +126,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Вычисление выражения
     private fun calculateResult() {
         val currentText = tvScreen.text.toString()
         val parts = currentText.split(" ")
@@ -165,16 +168,13 @@ class MainActivity : ComponentActivity() {
         } else {
             builder.setMessage(historyList.joinToString("\n"))
         }
-
-        // Кнопка для закрытия окна
+        
         builder.setPositiveButton("Закрыть", null)
 
-        // Кнопка для очистки истории
         builder.setNegativeButton("Очистить историю") { _, _ ->
             historyList.clear() // Удаляем все элементы из списка
         }
 
-        // Показываем окно
         builder.show()
     }
 
