@@ -168,7 +168,7 @@ class MainActivity : ComponentActivity() {
         } else {
             builder.setMessage(historyList.joinToString("\n"))
         }
-        
+
         builder.setPositiveButton("Закрыть", null)
 
         builder.setNegativeButton("Очистить историю") { _, _ ->

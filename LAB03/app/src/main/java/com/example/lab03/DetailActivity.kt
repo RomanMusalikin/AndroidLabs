@@ -10,7 +10,6 @@ import androidx.activity.ComponentActivity
 
 class DetailActivity : ComponentActivity() {
 
-    // Переменная для плеера, чтобы мы могли управлять им
     private var mediaPlayer: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,7 +19,6 @@ class DetailActivity : ComponentActivity() {
         val title = intent.getStringExtra("title")
         val desc = intent.getStringExtra("desc")
         val imageRes = intent.getIntExtra("image", 0)
-        // Получаем ID звука. Если звука нет, придет 0.
         val soundRes = intent.getIntExtra("sound_res", 0)
 
         val img = findViewById<ImageView>(R.id.detail_image)
@@ -32,19 +30,15 @@ class DetailActivity : ComponentActivity() {
         txtDesc.text = desc
         img.setImageResource(imageRes)
 
-        // Кнопка видна только если передан ID звука (не 0)
         if (soundRes != 0) {
             btnSound.visibility = View.VISIBLE
             btnSound.setOnClickListener {
-                // Останавливаем предыдущий звук, если он еще играет
                 mediaPlayer?.stop()
                 mediaPlayer?.release()
 
-                // Создаем и запускаем новый звук
                 mediaPlayer = MediaPlayer.create(this, soundRes)
                 mediaPlayer?.start()
 
-                // Чистим память, когда звук доиграет
                 mediaPlayer?.setOnCompletionListener { mp ->
                     mp.release()
                     mediaPlayer = null
@@ -55,7 +49,6 @@ class DetailActivity : ComponentActivity() {
         }
     }
 
-    // Хорошим тоном считается выключать звук, если пользователь закрыл экран
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayer?.release()
