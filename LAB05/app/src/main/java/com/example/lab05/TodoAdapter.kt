@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 class TodoAdapter(
     private val onToggle: (Todo) -> Unit,
     private val onDelete: (Todo) -> Unit,
-    private val onEdit: (Todo) -> Unit // Добавили передачу функции редактирования
+    private val onEdit: (Todo) -> Unit
 ) : ListAdapter<Todo, TodoAdapter.ViewHolder>(DiffCallback()) {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
