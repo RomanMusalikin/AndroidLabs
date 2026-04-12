@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
         val btnAdd = findViewById<MaterialButton>(R.id.btnAdd)
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
 
-        // Обновленная настройка адаптера (добавлен onEdit)
         adapter = TodoAdapter(
             onToggle = { todo ->
                 lifecycleScope.launch {
@@ -42,7 +41,7 @@ class MainActivity : AppCompatActivity() {
                 }
             },
             onEdit = { todo ->
-                showEditDialog(todo) // Вызываем диалоговое окно
+                showEditDialog(todo)
             }
         )
 
@@ -69,10 +68,9 @@ class MainActivity : AppCompatActivity() {
     // Функция для создания и показа всплывающего окна редактирования
     private fun showEditDialog(todo: Todo) {
         val editText = EditText(this)
-        editText.setText(todo.title) // Подставляем старый текст
-        editText.setSelection(editText.text.length) // Ставим курсор в конец текста
+        editText.setText(todo.title)
+        editText.setSelection(editText.text.length)
 
-        // Добавляем отступы, чтобы поле ввода не прилипало к краям окна
         val container = FrameLayout(this)
         val params = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
