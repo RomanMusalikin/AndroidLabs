@@ -1,6 +1,8 @@
 package com.example.lab4_weather
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log // Не забудь импорт!
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -12,11 +14,10 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import android.content.Intent //
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var adapter: WeatherAdapter
-    // Сохраняем загруженный список, чтобы потом передать его на экран деталей
     private var currentForecastList: List<ForecastItem> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,17 +29,11 @@ class MainActivity : AppCompatActivity() {
         val tvCityName = findViewById<TextView>(R.id.tvCityName)
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewWeather)
 
-        // 1. Настройка списка (RecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Передаем пустой список при старте и описываем, что делать при клике на день
         adapter = WeatherAdapter(emptyList()) { clickedItem ->
-            // Находим индекс дня, на который кликнули
             val position = currentForecastList.indexOf(clickedItem)
-
-            // Создаем Intent для перехода на DetailActivity
             val intent = Intent(this, DetailActivity::class.java).apply {
-                // Передаем весь список прогнозов и стартовую позицию
                 putExtra("forecast_list", ArrayList(currentForecastList))
                 putExtra("start_position", position)
             }
@@ -46,7 +41,6 @@ class MainActivity : AppCompatActivity() {
         }
         recyclerView.adapter = adapter
 
-        // 2. Обработка нажатия на кнопку "Найти"
         btnSearch.setOnClickListener {
             val city = etCity.text.toString().trim()
             if (city.isNotEmpty()) {
@@ -57,32 +51,36 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // 3. Загрузим погоду по умолчанию при старте приложения
+        // Авто-загрузка при старте
         fetchWeather("Moscow")
     }
 
     private fun fetchWeather(city: String) {
         val apiKey = "072544508f5c1825beac25eee9e22c5c"
 
-        // Запускаем корутину (фоновый процесс) для сетевого запроса
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Делаем запрос к API
+                // Логируем начало запроса
+                Log.d("WeatherDebug", "Запрашиваем погоду для: $city")
+
                 val response = RetrofitClient.api.getForecast(city, apiKey)
 
-                // ВАЖНО: API выдает прогноз каждые 3 часа (40 элементов на 5 дней).
-                // Чтобы получить краткий прогноз на дни, отфильтруем только дневные часы (например, на 12:00)
+                // Если дошли сюда, значит запрос успешный
                 val dailyForecast = response.list.filter { it.dt_txt.contains("12:00:00") }
 
-                // Возвращаемся в главный поток, чтобы обновить интерфейс
+                Log.d("WeatherDebug", "Данные успешно получены. Элементов: ${dailyForecast.size}")
+
                 withContext(Dispatchers.Main) {
                     currentForecastList = dailyForecast
-                    adapter.updateData(dailyForecast) // Отправляем данные в адаптер
+                    adapter.updateData(dailyForecast)
                 }
             } catch (e: Exception) {
-                // Обработка ошибок (нет интернета, неверный город, опечатка)
+                // ВАЖНО: Выводим полную ошибку в Logcat
+                Log.e("WeatherDebug", "ПРОИЗОШЛА ОШИБКА ПРИ ЗАПРОСЕ!", e)
+
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@MainActivity, "Ошибка: Город не найден или нет сети", Toast.LENGTH_LONG).show()
+                    // Выводим текст ошибки в Toast (для отладки можно вывести саму ошибку e.message)
+                    Toast.makeText(this@MainActivity, "Ошибка: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
             }
         }

@@ -13,7 +13,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 
-// Для геолокации
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -28,8 +27,6 @@ import com.yandex.mapkit.mapview.MapView
 import com.yandex.mapkit.search.*
 import com.yandex.runtime.Error
 import com.yandex.runtime.image.ImageProvider
-import com.yandex.runtime.network.NetworkError
-import com.yandex.runtime.network.RemoteError
 
 import com.yandex.mapkit.directions.DirectionsFactory
 import com.yandex.mapkit.directions.driving.DrivingOptions
@@ -38,7 +35,13 @@ import com.yandex.mapkit.directions.driving.VehicleOptions
 import com.yandex.mapkit.directions.driving.DrivingSession
 import com.yandex.mapkit.directions.driving.DrivingRouterType
 
+// НОВЫЕ ИМПОРТЫ для долгого нажатия
+import com.yandex.mapkit.map.InputListener
+import android.app.AlertDialog
+import java.util.Locale
+
 import com.yandex.mapkit.search.Session as SearchSession
+import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {
 
@@ -58,6 +61,20 @@ class MainActivity : AppCompatActivity() {
     private var searchSessionTo: SearchSession? = null
     private var drivingSession: DrivingSession? = null
 
+    private var savedAzimuth: Float? = null
+
+    // ГЛАВНОЕ ИСПРАВЛЕНИЕ: Выносим слушатель карты в переменную класса, чтобы его не удалил GC
+    private val inputListener = object : InputListener {
+        override fun onMapTap(map: com.yandex.mapkit.map.Map, point: Point) {
+            // Обычный короткий клик игнорируем
+        }
+
+        override fun onMapLongTap(map: com.yandex.mapkit.map.Map, point: Point) {
+            // При долгом клике вызываем наше меню
+            showLongClickDialog(point)
+        }
+    }
+
     companion object {
         private const val LOCATION_PERMISSION_CODE = 1001
     }
@@ -71,6 +88,9 @@ class MainActivity : AppCompatActivity() {
         etTo = findViewById(R.id.etTo)
         val btnRoute = findViewById<MaterialButton>(R.id.btnRoute)
         val fabMyLocation = findViewById<FloatingActionButton>(R.id.fabMyLocation)
+        val fabCompass = findViewById<FloatingActionButton>(R.id.fabCompass)
+        val btnZoomIn = findViewById<MaterialButton>(R.id.btnZoomIn)
+        val btnZoomOut = findViewById<MaterialButton>(R.id.btnZoomOut)
 
         mapObjects = mapView.map.mapObjects.addCollection()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
@@ -80,19 +100,55 @@ class MainActivity : AppCompatActivity() {
 
         mapView.map.move(CameraPosition(Point(55.751244, 37.618423), 11.0f, 0.0f, 0.0f))
 
-        // Обработка кнопки GPS
+        // ПРИВЯЗЫВАЕМ СЛУШАТЕЛЬ ДОЛГОГО НАЖАТИЯ К КАРТЕ
+        mapView.map.addInputListener(inputListener)
+
+        // ===================== УПРАВЛЕНИЕ КАРТОЙ =====================
+
+        btnZoomIn.setOnClickListener {
+            val pos = mapView.map.cameraPosition
+            mapView.map.move(
+                CameraPosition(pos.target, pos.zoom + 1.0f, pos.azimuth, pos.tilt),
+                com.yandex.mapkit.Animation(com.yandex.mapkit.Animation.Type.SMOOTH, 0.3f), null
+            )
+        }
+
+        btnZoomOut.setOnClickListener {
+            val pos = mapView.map.cameraPosition
+            mapView.map.move(
+                CameraPosition(pos.target, pos.zoom - 1.0f, pos.azimuth, pos.tilt),
+                com.yandex.mapkit.Animation(com.yandex.mapkit.Animation.Type.SMOOTH, 0.3f), null
+            )
+        }
+
+        fabCompass.setOnClickListener {
+            val currentCamera = mapView.map.cameraPosition
+            if (abs(currentCamera.azimuth) > 1.0f) {
+                savedAzimuth = currentCamera.azimuth
+                mapView.map.move(
+                    CameraPosition(currentCamera.target, currentCamera.zoom, 0.0f, currentCamera.tilt),
+                    com.yandex.mapkit.Animation(com.yandex.mapkit.Animation.Type.SMOOTH, 0.5f), null
+                )
+            } else {
+                val targetAzimuth = savedAzimuth ?: 0.0f
+                mapView.map.move(
+                    CameraPosition(currentCamera.target, currentCamera.zoom, targetAzimuth, currentCamera.tilt),
+                    com.yandex.mapkit.Animation(com.yandex.mapkit.Animation.Type.SMOOTH, 0.5f), null
+                )
+                savedAzimuth = null
+            }
+        }
+
         fabMyLocation.setOnClickListener {
             requestLocationAndMove()
         }
 
-        // Обработка кнопки маршрута
         btnRoute.setOnClickListener {
             val fromQuery = etFrom.text.toString().trim()
             val toQuery = etTo.text.toString().trim()
 
             if (fromQuery.isNotEmpty() && toQuery.isNotEmpty()) {
                 hideKeyboard()
-
                 searchSessionFrom?.cancel()
                 searchSessionTo?.cancel()
                 drivingSession?.cancel()
@@ -100,31 +156,93 @@ class MainActivity : AppCompatActivity() {
 
                 Toast.makeText(this, "Ищем точки...", Toast.LENGTH_SHORT).show()
 
-                // УМНАЯ ЛОГИКА: Проверяем, не использовал ли юзер GPS для первой точки
                 val useMyLoc = (fromQuery == "Моё местоположение" && pointA != null)
+                // Если в поле Откуда координаты (от долгого нажатия)
+                val isCoordsFrom = fromQuery.matches(Regex(".*[0-9]+\\.[0-9]+.*"))
+                // Если в поле Куда координаты
+                val isCoordsTo = toQuery.matches(Regex(".*[0-9]+\\.[0-9]+.*"))
 
-                if (useMyLoc) {
-                    // Возвращаем маркер GPS на карту
-                    mapObjects.addPlacemark(pointA!!).apply {
-                        setIcon(ImageProvider.fromResource(this@MainActivity, android.R.drawable.ic_menu_mylocation))
+                if (useMyLoc || isCoordsFrom) {
+                    pointA?.let {
+                        mapObjects.addPlacemark(it).apply {
+                            setIcon(ImageProvider.fromResource(this@MainActivity, android.R.drawable.ic_menu_mylocation))
+                        }
                     }
-                    // Ищем только пункт Б
-                    searchPlace(toQuery, isFrom = false)
+                    if (!isCoordsTo) searchPlace(toQuery, isFrom = false)
                 } else {
                     pointA = null
-                    // Запускаем поиск обеих точек
                     searchPlace(fromQuery, isFrom = true)
-                    searchPlace(toQuery, isFrom = false)
                 }
-                pointB = null
+
+                if (!isCoordsTo) {
+                    if (!useMyLoc && !isCoordsFrom) searchPlace(toQuery, isFrom = false)
+                } else {
+                    pointB?.let {
+                        mapObjects.addPlacemark(it).apply {
+                            setIcon(ImageProvider.fromResource(this@MainActivity, android.R.drawable.ic_menu_compass))
+                        }
+                    }
+                }
+
+                if ((useMyLoc || isCoordsFrom) && isCoordsTo && pointA != null && pointB != null) {
+                    buildRoute(pointA!!, pointB!!)
+                }
 
             } else {
                 Toast.makeText(this, "Заполните оба поля", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // При старте запрашиваем права
         requestLocationPermission()
+    }
+
+    // ===================== МЕНЮ ДОЛГОГО КЛИКА =====================
+    private fun showLongClickDialog(point: Point) {
+        val options = arrayOf("Отсюда", "Сюда")
+        AlertDialog.Builder(this)
+            .setTitle("Выбрать точку")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> setPointFromMap(point, isFrom = true)
+                    1 -> setPointFromMap(point, isFrom = false)
+                }
+            }
+            .show()
+    }
+
+    private fun setPointFromMap(point: Point, isFrom: Boolean) {
+        // Красиво форматируем координаты для текстового поля
+        val coordsText = String.format(Locale.US, "%.5f, %.5f", point.latitude, point.longitude)
+
+        if (isFrom) {
+            pointA = point
+            etFrom.setText(coordsText)
+        } else {
+            pointB = point
+            etTo.setText(coordsText)
+        }
+
+        // Очищаем карту от старого маршрута
+        mapObjects.clear()
+        drivingSession?.cancel()
+
+        // Заново рисуем маркер А (если он есть)
+        pointA?.let {
+            mapObjects.addPlacemark(it).apply {
+                setIcon(ImageProvider.fromResource(this@MainActivity, android.R.drawable.ic_menu_mylocation))
+            }
+        }
+        // Заново рисуем маркер Б (если он есть)
+        pointB?.let {
+            mapObjects.addPlacemark(it).apply {
+                setIcon(ImageProvider.fromResource(this@MainActivity, android.R.drawable.ic_menu_compass))
+            }
+        }
+
+        // АВТОМАРШРУТ: Если обе точки заданы - сразу строим путь!
+        if (pointA != null && pointB != null) {
+            buildRoute(pointA!!, pointB!!)
+        }
     }
 
     // ===================== ГЕОЛОКАЦИЯ =====================
@@ -134,21 +252,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ===================== ГЕОЛОКАЦИЯ (ХАРДКОД ДЛЯ ЛАБЫ) =====================
     private fun requestLocationAndMove() {
-        // Просто игнорируем датчик GPS эмулятора и сразу задаем координаты МАДИ
         val madiPoint = Point(55.800318, 37.531608)
-
         pointA = madiPoint
         etFrom.setText("Моё местоположение")
 
-        // Перемещаем камеру
         mapView.map.move(CameraPosition(madiPoint, 15.0f, 0.0f, 0.0f))
 
-        // Ставим синий маркер
         mapObjects.clear()
+        drivingSession?.cancel()
+
         mapObjects.addPlacemark(madiPoint).apply {
             setIcon(ImageProvider.fromResource(this@MainActivity, android.R.drawable.ic_menu_mylocation))
+        }
+
+        pointB?.let {
+            mapObjects.addPlacemark(it).apply {
+                setIcon(ImageProvider.fromResource(this@MainActivity, android.R.drawable.ic_menu_compass))
+            }
+            buildRoute(pointA!!, pointB!!)
         }
 
         Toast.makeText(this, "Телепортировались в МАДИ!", Toast.LENGTH_SHORT).show()
@@ -206,6 +328,7 @@ class MainActivity : AppCompatActivity() {
                                 setStrokeWidth(5.0f)
                             }
 
+                            // Плавно отъезжаем, чтобы показать весь маршрут
                             mapView.map.move(CameraPosition(from, 13.0f, 0.0f, 0.0f))
                             Toast.makeText(this@MainActivity, "Маршрут построен!", Toast.LENGTH_SHORT).show()
                         }

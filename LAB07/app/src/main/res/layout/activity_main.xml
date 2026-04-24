@@ -60,6 +60,54 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabCompass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:src="@drawable/ic_navigation"
+        app:backgroundTint="#FFFFFF"
+        app:tint="#4488FF"
+        app:layout_constraintTop_toTopOf="@id/mapView"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/zoomLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_margin="16dp"
+        app:layout_constraintBottom_toTopOf="@id/fabMyLocation"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnZoomIn"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:text="+"
+            android:textSize="24sp"
+            android:textColor="#4488FF"
+            app:backgroundTint="#FFFFFF"
+            android:insetBottom="0dp"
+            android:insetTop="0dp"
+            android:padding="0dp"
+            app:cornerRadius="14dp"
+            android:layout_marginBottom="8dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnZoomOut"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:text="-"
+            android:textSize="28sp"
+            android:textColor="#4488FF"
+            app:backgroundTint="#FFFFFF"
+            android:insetBottom="0dp"
+            android:insetTop="0dp"
+            android:padding="0dp"
+            app:cornerRadius="14dp"/>
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabMyLocation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
