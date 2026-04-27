@@ -2,8 +2,6 @@ package com.example.lab07
 
 import android.app.Application
 import com.yandex.mapkit.MapKitFactory
-import com.yandex.mapkit.search.SearchFactory
-import com.yandex.mapkit.transport.TransportFactory
 
 class App : Application() {
     override fun onCreate() {
